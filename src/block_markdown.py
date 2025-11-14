@@ -1,5 +1,9 @@
 import re
 from enum import Enum
+from htmlnode import HTMLNode
+from inline_markdown import text_to_textnodes
+from textnode import TextNode, text_node_to_html_node, TextType
+
 
 
 def markdown_to_blocks(markdown):
@@ -58,18 +62,54 @@ def block_to_block_type(markdown_block: str) -> BlockType:
         return BlockType.ORDERED_LIST
     return BlockType.PARAGRAPH
 
-# assert block_to_block_type("# Title") == BlockType.HEADING
-# assert block_to_block_type("####### too many") == BlockType.PARAGRAPH
-# assert block_to_block_type("###NoSpace") == BlockType.PARAGRAPH
-#
-# assert block_to_block_type("```\ncode\n```") == BlockType.CODE
-#
-# assert block_to_block_type("> a\n> b") == BlockType.QUOTE
-# assert block_to_block_type("> a\nb") == BlockType.PARAGRAPH
-#
-# assert block_to_block_type("- a\n- b") == BlockType.UNORDERED_LIST
-# assert block_to_block_type("-a") == BlockType.PARAGRAPH
-#
-# assert block_to_block_type("1. a\n2. b\n3. c") == BlockType.ORDERED_LIST
-# assert block_to_block_type("2. a\n3. b") == BlockType.PARAGRAPH
-# assert block_to_block_type("1. a\n3. b") == BlockType.PARAGRAPH
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    return [text_node_to_html_node(node) for node in text_nodes]
+
+#todo Finish Quote, Ordered list, and Unordered List
+
+
+def markdown_to_html_node(markdown):
+    new_nodes = []
+    blocks = markdown_to_blocks(markdown)
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        # Paragraph Formatting
+        if block_type == BlockType.PARAGRAPH:
+            paragraph_text = " ".join(block.splitlines())
+            children = text_to_children(paragraph_text)
+            new_nodes.append(HTMLNode(tag="p", value=None, children=children, props=None))
+        # Code Formatting
+        elif block_type == BlockType.CODE:
+            lines = block.splitlines()
+            inner_lines = lines[1:-1]
+            inner_code = "\n".join(inner_lines)
+            nd = TextNode(text=inner_code, text_type=TextType.CODE)
+            code_html = text_node_to_html_node(nd)
+            new_nodes.append(HTMLNode(tag="pre", value=None, children=[code_html], props=None))
+        # Heading Formatting
+        elif block_type == BlockType.HEADING:
+            level = 0
+            for i in block:
+                if i == "#":
+                    level += 1
+                if i != "#":
+                    break
+            stripped = block[level:].lstrip()
+            print(stripped)
+            children = text_to_children(stripped)
+            new_nodes.append(HTMLNode(tag=f"h{level}", value=None, children=children, props=None))
+
+
+
+
+
+
+
+    return HTMLNode(tag="div", children=new_nodes)
+
+md_heading = "###### Smallest heading"
+node = markdown_to_html_node(md_heading)
+print(repr(node))
+
+
