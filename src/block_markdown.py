@@ -1,13 +1,31 @@
 import re
 from enum import Enum
-from htmlnode import HTMLNode
+from typing import Any, ParamSpecArgs
+
+from htmlnode import HTMLNode, ParentNode
 from inline_markdown import text_to_textnodes
 from textnode import TextNode, text_node_to_html_node, TextType
 
 
 
-def markdown_to_blocks(markdown):
-    return [block.strip() for block in markdown.split("\n\n") if block.strip()]
+
+def markdown_to_blocks(markdown: str):
+    lines = markdown.splitlines()
+    blocks = []
+    current: list[str] = []
+
+    for line in lines:
+        if line.strip() == "":
+            if current:
+                blocks.append("\n".join(current).strip())
+                current = []
+        else:
+            current.append(line)
+
+    if current:
+        blocks.append("\n".join(current).strip())
+
+    return blocks
 
 class BlockType(Enum):
     PARAGRAPH = "paragraph"
@@ -66,27 +84,34 @@ def text_to_children(text):
     text_nodes = text_to_textnodes(text)
     return [text_node_to_html_node(node) for node in text_nodes]
 
-#todo Finish Quote, Ordered list, and Unordered List
+#todo Ordered list
 
 
 def markdown_to_html_node(markdown):
-    new_nodes = []
+    new_nodes: list[Any] = []
     blocks = markdown_to_blocks(markdown)
     for block in blocks:
         block_type = block_to_block_type(block)
         # Paragraph Formatting
         if block_type == BlockType.PARAGRAPH:
-            paragraph_text = " ".join(block.splitlines())
+            # Strip each line, then join with a single space
+            paragraph_text = " ".join(line.strip() for line in block.splitlines())
             children = text_to_children(paragraph_text)
-            new_nodes.append(HTMLNode(tag="p", value=None, children=children, props=None))
+            new_nodes.append(ParentNode(tag="p", children=children))
         # Code Formatting
         elif block_type == BlockType.CODE:
             lines = block.splitlines()
             inner_lines = lines[1:-1]
-            inner_code = "\n".join(inner_lines)
+
+            # Strip leading spaces from each inner line (tests expect no indentation)
+            stripped_lines = [line.lstrip() for line in inner_lines]
+
+            # Join with a newline *between* lines, and add a final newline
+            inner_code = "\n".join(stripped_lines) + "\n"
+
             nd = TextNode(text=inner_code, text_type=TextType.CODE)
             code_html = text_node_to_html_node(nd)
-            new_nodes.append(HTMLNode(tag="pre", value=None, children=[code_html], props=None))
+            new_nodes.append(ParentNode(tag="pre", children=[code_html]))
         # Heading Formatting
         elif block_type == BlockType.HEADING:
             level = 0
@@ -96,20 +121,86 @@ def markdown_to_html_node(markdown):
                 if i != "#":
                     break
             stripped = block[level:].lstrip()
-            print(stripped)
             children = text_to_children(stripped)
-            new_nodes.append(HTMLNode(tag=f"h{level}", value=None, children=children, props=None))
+            new_nodes.append(ParentNode(tag=f"h{level}", children=children, props=None))
+        # Quote formatting
+        elif block_type == BlockType.QUOTE:
+            lines = block.split("\n")
+            stripped_lines = []
+            for line in lines:
+                if line.startswith(">"):
+                    line = line[1:]
+                    if line.startswith(" "):
+                        line = line[1:]
+                stripped_lines.append(line)
+
+            formatted = "\n".join(stripped_lines).strip()
+            new_nodes.append(
+                ParentNode(
+                    tag="blockquote",
+                    children=text_to_children(formatted),
+                    props=None,
+                )
+            )
+        # UOList formatting
+        elif block_type == BlockType.UNORDERED_LIST:
+            lines = block.split("\n")
+            li_nodes = []
+            for line in lines:
+                line = line.strip()
+                if line.startswith("- "):
+                    item_text = line[2:]
+                elif line.startswith("* "):
+                    item_text = line[2:]
+                else:
+                    continue
+                children = text_to_children(item_text)
+                li_nodes.append(
+                    ParentNode(
+                        tag="li",
+                        children=children,
+                        props=None,
+                    )
+                )
+            new_nodes.append(
+                ParentNode(
+                    tag="ul",
+                    children=li_nodes,
+                    props=None,
+                )
+            )
+
+        elif block_type == BlockType.ORDERED_LIST:
+            lines = block.split("\n")
+            oli_nodes = []
+            for line in lines:
+                line = line.strip()
+                if "." in line:
+                    prefix, rest = line.split(".", 1)
+                    if prefix.isdigit():
+                        item_text = rest.lstrip()  # remove the space after "1."
+                    else:
+                        continue  # skip malformed lines
+                    children = text_to_children(item_text)
+
+                    oli_nodes.append(
+                        HTMLNode(
+                            tag="li",
+                            children=children,
+                            props=None,
+                        )
+                    )
+            new_nodes.append(
+                ParentNode(
+                    tag="ol",
+                    children=oli_nodes,
+                    props=None,
+                )
+            )
 
 
 
 
 
-
-
-    return HTMLNode(tag="div", children=new_nodes)
-
-md_heading = "###### Smallest heading"
-node = markdown_to_html_node(md_heading)
-print(repr(node))
-
+    return ParentNode(tag="div", children=new_nodes)
 
