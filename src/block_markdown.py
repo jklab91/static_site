@@ -1,8 +1,8 @@
 import re
 from enum import Enum
-from typing import Any, ParamSpecArgs
+from typing import Any
 
-from htmlnode import HTMLNode, ParentNode
+from htmlnode import ParentNode
 from inline_markdown import text_to_textnodes
 from textnode import TextNode, text_node_to_html_node, TextType
 
@@ -83,8 +83,6 @@ def block_to_block_type(markdown_block: str) -> BlockType:
 def text_to_children(text):
     text_nodes = text_to_textnodes(text)
     return [text_node_to_html_node(node) for node in text_nodes]
-
-#todo Ordered list
 
 
 def markdown_to_html_node(markdown):
@@ -184,7 +182,7 @@ def markdown_to_html_node(markdown):
                     children = text_to_children(item_text)
 
                     oli_nodes.append(
-                        HTMLNode(
+                        ParentNode(
                             tag="li",
                             children=children,
                             props=None,

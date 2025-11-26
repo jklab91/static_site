@@ -10,7 +10,7 @@ class HTMLNode:
 
     def to_html(self):
         raise NotImplementedError
-    
+
     def props_to_html(self):
         if self.props is None:
             return ""
@@ -51,18 +51,11 @@ class ParentNode(HTMLNode):
 
     def to_html(self):
         if self.tag is None:
-            raise ValueError("Cannot render an HTMLNode without a tag.")
-        
-        elif self.children is None:
-            raise ValueError("Missing Children")
-        
-        output = f"<{self.tag}{self.props_to_html()}>"
-        count = 0
-        while count != len(self.children):
-            output += self.children[count].to_html()
-            count += 1
-        
-        output += f"</{self.tag}>"
-
-        return output
+            raise ValueError("invalid HTML: no tag")
+        if self.children is None:
+            raise ValueError("invalid HTML: no children")
+        children_html = ""
+        for child in self.children:
+            children_html += child.to_html()
+        return f"<{self.tag}{self.props_to_html()}>{children_html}</{self.tag}>"
 
