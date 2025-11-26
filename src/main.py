@@ -1,6 +1,5 @@
 import shutil, os
-
-#Thiis is a test
+#This is a new test
 
 from generate_page import generate_page
 
