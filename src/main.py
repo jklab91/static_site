@@ -2,7 +2,7 @@ import shutil, os
 #This is a new test
 
 from generate_page import generate_page
-
+from generate_page import generate_pages_recursive
 
 SOURCE_DIR = "static/"
 DEST_DIR = "public/"
@@ -11,7 +11,7 @@ PORT = 8888
 def main():
     copy_src_to_public(SOURCE_DIR, DEST_DIR, True)
 
-    generate_page("content/index.md", "template.html", dest_path=f'{DEST_DIR}index.html')
+    generate_pages_recursive(dir_path_content="content/", template_path="template.html", dest_dir_path=DEST_DIR)
 
 
 def copy_src_to_public(source_dir: str, destination_dir: str, clean_dir: bool):

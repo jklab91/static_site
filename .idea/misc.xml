@@ -3,7 +3,7 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.14 (static_site)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.14 virtualenv at ~/Documents/Prelude/workspace/github.com/jklab91/static_site/.venv" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.14 (static_site)" project-jdk-type="Python SDK" />
   <component name="PythonCompatibilityInspectionAdvertiser">
     <option name="version" value="3" />
   </component>
