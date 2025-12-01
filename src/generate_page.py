@@ -2,7 +2,7 @@ from block_markdown import markdown_to_html_node
 from extract_title import extract_title
 import os
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(basepath, from_path, template_path, dest_path):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     #
     with open(from_path, "r") as file:
@@ -17,19 +17,20 @@ def generate_page(from_path, template_path, dest_path):
     html = node.to_html()
     title = extract_title(md_contents)
     output = template.replace("{{ Title }}", title ).replace("{{ Content }}", html)
+    new_output = output.replace('href="/', f'href="{basepath}').replace('src="/', f'src="{basepath}')
 
     directory = os.path.dirname(dest_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
     with open(dest_path, 'w') as f:
-        f.write(output)
+        f.write(new_output)
 
 
 
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(basepath, dir_path_content, template_path, dest_dir_path):
     files = os.listdir(dir_path_content)
     for file in files:
         from_path = os.path.join(dir_path_content, file)
@@ -38,11 +39,11 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                 name = file.replace(".md", ".html")
                 final_path = os.path.join(dest_dir_path, name)
 
-                generate_page(from_path=from_path, template_path=template_path, dest_path=final_path)
+                generate_page(basepath=basepath, from_path=from_path, template_path=template_path, dest_path=final_path)
             else:
                 pass
         else:
-            generate_pages_recursive(dir_path_content=os.path.join(dir_path_content, file), template_path=template_path,
+            generate_pages_recursive(basepath=basepath, dir_path_content=os.path.join(dir_path_content, file), template_path=template_path,
                                      dest_dir_path=os.path.join(dest_dir_path, file))
 
 

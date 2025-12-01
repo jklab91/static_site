@@ -1,17 +1,21 @@
-import shutil, os
-#This is a new test
+import shutil, os, sys
 
-from generate_page import generate_page
 from generate_page import generate_pages_recursive
 
 SOURCE_DIR = "static/"
-DEST_DIR = "public/"
+DEST_DIR = "docs/"
 PORT = 8888
+basepath = ''
+if len(sys.argv) > 1:
+    basepath = sys.argv[1]
+else:
+    basepath = '/'
+
 
 def main():
     copy_src_to_public(SOURCE_DIR, DEST_DIR, True)
 
-    generate_pages_recursive(dir_path_content="content/", template_path="template.html", dest_dir_path=DEST_DIR)
+    generate_pages_recursive(basepath=basepath, dir_path_content="content/", template_path="template.html", dest_dir_path=DEST_DIR)
 
 
 def copy_src_to_public(source_dir: str, destination_dir: str, clean_dir: bool):
